@@ -1,0 +1,110 @@
+﻿using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
+using AspireWatchDemo.WatchBootstrap;
+using Microsoft.Extensions.DependencyInjection;
+
+EnsureEnvironment("ASPNETCORE_URLS", "http://127.0.0.1:18888");
+EnsureEnvironment("DOTNET_DASHBOARD_OTLP_ENDPOINT_URL", "http://127.0.0.1:18889");
+EnsureEnvironment("DOTNET_DASHBOARD_OTLP_HTTP_ENDPOINT_URL", "http://127.0.0.1:18890");
+EnsureEnvironment("ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL", Environment.GetEnvironmentVariable("DOTNET_DASHBOARD_OTLP_ENDPOINT_URL") ?? "http://127.0.0.1:18889");
+EnsureEnvironment("ASPIRE_DASHBOARD_OTLP_HTTP_ENDPOINT_URL", Environment.GetEnvironmentVariable("DOTNET_DASHBOARD_OTLP_HTTP_ENDPOINT_URL") ?? "http://127.0.0.1:18890");
+EnsureEnvironment("DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS", "true");
+EnsureEnvironment("ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS", "true");
+EnsureEnvironment("ASPIRE_ALLOW_UNSECURED_TRANSPORT", "true");
+
+var builder = DistributedApplication.CreateBuilder(args);
+
+var repoRoot = WorkspaceLocator.FindRepositoryRoot(Directory.GetCurrentDirectory());
+var apiProjectPath = Path.Combine(repoRoot, "src", "AspireWatchDemo.ApiService", "AspireWatchDemo.ApiService.csproj");
+var webProjectPath = Path.Combine(repoRoot, "src", "AspireWatchDemo.Web", "AspireWatchDemo.Web.csproj");
+
+ValidateProjectPath(apiProjectPath, "api");
+ValidateProjectPath(webProjectPath, "web");
+
+var watch = WatchAspireLocator.Resolve();
+var mode = WatchAspireCommandBuilder.GetMode(watch);
+var pipes = PipeNameFactory.CreateSet();
+
+Console.WriteLine($"[apphost] Repo root: {repoRoot}");
+Console.WriteLine($"[apphost] Watch.Aspire path: {watch.WatchDllPath}");
+Console.WriteLine($"[apphost] SDK directory: {watch.Dotnet.SdkDirectory}");
+Console.WriteLine($"[apphost] Watch.Aspire mode: {mode}");
+Console.WriteLine($"[apphost] Pipe names: server={pipes.ServerPipeName}, status={pipes.StatusPipeName}, control={pipes.ControlPipeName}");
+
+const int apiPort = 5071;
+const int webPort = 5072;
+
+IResourceBuilder<ExecutableResource>? watchServer = null;
+if (mode == WatchAspireToolMode.LauncherCommands)
+{
+    builder.Services.AddSingleton(pipes);
+    builder.Services.AddHostedService<WatchPipeMonitorHostedService>();
+
+    watchServer = builder.AddExecutable(
+            "watch-server",
+            watch.Dotnet.DotnetExecutablePath,
+            ".",
+            [.. WatchAspireCommandBuilder.BuildServerArguments(watch, pipes, [apiProjectPath, webProjectPath])])
+        .WithEnvironment("ASPIRE_WATCH_PIPE_CONNECTION_TIMEOUT_SECONDS", "30");
+}
+else
+{
+    Console.WriteLine("[apphost] The public 10.0.200 package does not expose separate 'server'/'resource' launchers yet; falling back to per-project watch executables.");
+}
+
+var api = AddWatchedService("api-service", apiProjectPath, apiPort);
+if (watchServer is not null)
+{
+    api = api.WaitForStart(watchServer);
+}
+
+var web = AddWatchedService("web-service", webProjectPath, webPort).WaitFor(api);
+if (watchServer is not null)
+{
+    web = web.WaitForStart(watchServer);
+}
+
+builder.Build().Run();
+
+IResourceBuilder<ExecutableResource> AddWatchedService(string name, string projectPath, int port)
+{
+    var url = $"http://127.0.0.1:{port}";
+    var environmentVariables = new Dictionary<string, string>
+    {
+        ["ASPNETCORE_URLS"] = url,
+        ["ASPNETCORE_ENVIRONMENT"] = "Development"
+    };
+
+    var arguments = mode == WatchAspireToolMode.LauncherCommands
+        ? WatchAspireCommandBuilder.BuildResourceArguments(watch, pipes.ServerPipeName, projectPath, environmentVariables)
+        : WatchAspireCommandBuilder.BuildProjectWatchArguments(watch, projectPath);
+
+    var serviceWorkingDirectory = Path.GetDirectoryName(projectPath)!;
+
+    return builder.AddExecutable(
+            name,
+            watch.Dotnet.DotnetExecutablePath,
+            serviceWorkingDirectory,
+            [.. arguments])
+        .WithEnvironment("ASPNETCORE_URLS", url)
+        .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
+        .WithHttpEndpoint(name: "http", port: port, targetPort: port, isProxied: false)
+        .WithExternalHttpEndpoints()
+        .WithHttpHealthCheck("/health");
+}
+
+static void ValidateProjectPath(string projectPath, string name)
+{
+    if (!File.Exists(projectPath))
+    {
+        throw new FileNotFoundException($"Could not resolve the {name} project at '{projectPath}'.", projectPath);
+    }
+}
+
+static void EnsureEnvironment(string name, string value)
+{
+    if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(name)))
+    {
+        Environment.SetEnvironmentVariable(name, value);
+    }
+}

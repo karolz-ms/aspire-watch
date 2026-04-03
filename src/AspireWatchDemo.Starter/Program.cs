@@ -1,0 +1,62 @@
+﻿using AspireWatchDemo.WatchBootstrap;
+
+var repoRoot = WorkspaceLocator.FindRepositoryRoot(Directory.GetCurrentDirectory());
+var solutionPath = Path.Combine(repoRoot, "AspireWatchDemo.sln");
+var appHostProjectPath = Path.Combine(repoRoot, "src", "AspireWatchDemo.AppHost", "AspireWatchDemo.AppHost.csproj");
+var restoreTargetPath = File.Exists(solutionPath) ? solutionPath : appHostProjectPath;
+
+if (!File.Exists(appHostProjectPath))
+{
+    Console.Error.WriteLine($"[starter] Could not find AppHost project at '{appHostProjectPath}'.");
+    return 1;
+}
+
+using var cancellationSource = new CancellationTokenSource();
+Console.CancelKeyPress += (_, eventArgs) =>
+{
+    eventArgs.Cancel = true;
+    cancellationSource.Cancel();
+};
+
+var dotnet = DotnetSdkLocator.Resolve();
+
+Console.WriteLine($"[starter] Repo root: {repoRoot}");
+Console.WriteLine($"[starter] dotnet: {dotnet.DotnetExecutablePath}");
+Console.WriteLine($"[starter] SDK dir: {dotnet.SdkDirectory}");
+Console.WriteLine($"[starter] Restoring '{restoreTargetPath}' to fetch Watch.Aspire and the demo services...");
+
+var restoreExitCode = await ProcessRunner.RunStreamingAsync(
+    dotnet.DotnetExecutablePath,
+    ["restore", restoreTargetPath],
+    repoRoot,
+    cancellationSource.Token);
+
+if (restoreExitCode != 0)
+{
+    Console.Error.WriteLine($"[starter] 'dotnet restore' failed with exit code {restoreExitCode}.");
+    return restoreExitCode;
+}
+
+var watch = WatchAspireLocator.Resolve();
+var mode = WatchAspireCommandBuilder.GetMode(watch);
+
+Console.WriteLine($"[starter] Watch.Aspire package version: {watch.PackageVersion}");
+Console.WriteLine($"[starter] Watch.Aspire entrypoint: {watch.WatchDllPath}");
+Console.WriteLine($"[starter] Watch.Aspire mode: {mode}");
+
+if (mode == WatchAspireToolMode.LegacyProjectOption)
+{
+    Console.WriteLine("[starter] The public 10.0.200 package still uses the legacy '--project' wrapper, so the starter is using compatibility mode.");
+}
+
+var hostArguments = WatchAspireCommandBuilder.BuildHostArguments(watch, appHostProjectPath, args);
+var appHostWorkingDirectory = Path.GetDirectoryName(appHostProjectPath)!;
+
+Console.WriteLine($"[starter] Launching Watch.Aspire against '{appHostProjectPath}'.");
+Console.WriteLine($"[starter] Working directory: {appHostWorkingDirectory}");
+
+return await ProcessRunner.RunStreamingAsync(
+    watch.Dotnet.DotnetExecutablePath,
+    hostArguments,
+    appHostWorkingDirectory,
+    cancellationSource.Token);
