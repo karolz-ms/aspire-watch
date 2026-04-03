@@ -146,7 +146,7 @@ public static class DotnetSdkLocator
 
 public static class WatchAspireLocator
 {
-    public const string RequestedPackageVersion = "10.0.200";
+    public const string RequestedPackageVersion = "10.0.201";
 
     private const string PackageId = "microsoft.dotnet.hotreload.watch.aspire";
     private const string EntryPointFileName = "Microsoft.DotNet.HotReload.Watch.Aspire.dll";
@@ -273,7 +273,7 @@ public static class WatchAspireCommandBuilder
     {
         if (GetMode(location) == WatchAspireToolMode.LegacyProjectOption)
         {
-            throw new NotSupportedException("The public 10.0.200 Watch.Aspire package does not expose the separate 'server' launcher yet.");
+            throw new NotSupportedException("The public 10.0.201 Watch.Aspire package does not expose the separate 'server' launcher yet.");
         }
 
         var args = new List<string>
@@ -304,7 +304,7 @@ public static class WatchAspireCommandBuilder
     {
         if (GetMode(location) == WatchAspireToolMode.LegacyProjectOption)
         {
-            throw new NotSupportedException("The public 10.0.200 Watch.Aspire package does not expose the separate 'resource' launcher yet.");
+            throw new NotSupportedException("The public 10.0.201 Watch.Aspire package does not expose the separate 'resource' launcher yet.");
         }
 
         var args = new List<string>

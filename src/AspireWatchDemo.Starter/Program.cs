@@ -46,7 +46,7 @@ Console.WriteLine($"[starter] Watch.Aspire mode: {mode}");
 
 if (mode == WatchAspireToolMode.LegacyProjectOption)
 {
-    Console.WriteLine("[starter] The public 10.0.200 package still uses the legacy '--project' wrapper, so the starter is using compatibility mode.");
+    Console.WriteLine("[starter] The public 10.0.201 package still uses the legacy '--project' wrapper, so the starter is using compatibility mode.");
 }
 
 var hostArguments = WatchAspireCommandBuilder.BuildHostArguments(watch, appHostProjectPath, args);

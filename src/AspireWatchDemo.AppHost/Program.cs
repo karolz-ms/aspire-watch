@@ -49,7 +49,7 @@ if (mode == WatchAspireToolMode.LauncherCommands)
 }
 else
 {
-    Console.WriteLine("[apphost] The public 10.0.200 package does not expose separate 'server'/'resource' launchers yet; falling back to per-project watch executables.");
+    Console.WriteLine("[apphost] The public 10.0.201 package does not expose separate 'server'/'resource' launchers yet; falling back to per-project watch executables.");
 }
 
 var api = AddWatchedService("api-service", apiProjectPath, apiPort);
