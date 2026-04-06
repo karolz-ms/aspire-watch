@@ -1,0 +1,30 @@
+using System.Security.Cryptography;
+
+namespace AspireWatchDemo.WatchBootstrap;
+
+public static class PipeNameFactory
+{
+    private const string Alphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+    public static WatchPipeNames CreateSet(int suffixLength = 6)
+    {
+        var suffix = CreateRandomSuffix(suffixLength);
+        return new(
+            ServerPipeName: $"server-{suffix}",
+            StatusPipeName: $"status-{suffix}",
+            ControlPipeName: $"control-{suffix}");
+    }
+
+    private static string CreateRandomSuffix(int length = 6)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(length);
+
+        Span<char> buffer = stackalloc char[length];
+        for (var i = 0; i < buffer.Length; i++)
+        {
+            buffer[i] = Alphabet[RandomNumberGenerator.GetInt32(Alphabet.Length)];
+        }
+
+        return new string(buffer);
+    }
+}
