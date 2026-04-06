@@ -1,2 +1,15 @@
 <Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/src/">
+    <Project Path="src/AspireWatchDemo.ApiService/AspireWatchDemo.ApiService.csproj" />
+    <Project Path="src/AspireWatchDemo.AppHost/AspireWatchDemo.AppHost.csproj" />
+    <Project Path="src/AspireWatchDemo.Shared/AspireWatchDemo.Shared.csproj" />
+    <Project Path="src/AspireWatchDemo.Starter/AspireWatchDemo.Starter.csproj" />
+    <Project Path="src/AspireWatchDemo.WatchBootstrap/AspireWatchDemo.WatchBootstrap.csproj" />
+    <Project Path="src/AspireWatchDemo.Web/AspireWatchDemo.Web.csproj" />
+  </Folder>
 </Solution>

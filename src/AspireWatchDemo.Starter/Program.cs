@@ -1,7 +1,7 @@
 ﻿using AspireWatchDemo.WatchBootstrap;
 
 var repoRoot = WorkspaceLocator.FindRepositoryRoot(Directory.GetCurrentDirectory());
-var solutionPath = Path.Combine(repoRoot, "AspireWatchDemo.sln");
+var solutionPath = Path.Combine(repoRoot, "AspireWatchDemo.slnx");
 var appHostProjectPath = Path.Combine(repoRoot, "src", "AspireWatchDemo.AppHost", "AspireWatchDemo.AppHost.csproj");
 var restoreTargetPath = File.Exists(solutionPath) ? solutionPath : appHostProjectPath;
 

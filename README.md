@@ -4,7 +4,7 @@ A standalone repro/playground for experimenting with the `Microsoft.DotNet.HotRe
 
 ## What is in here?
 
-- `src/AspireWatchDemo.Starter` — restores the solution, locates the restored Watch.Aspire payload, and launches it against the AppHost.
+- `src/AspireWatchDemo.Starter` — restores the `.slnx` solution, locates the restored Watch.Aspire payload, and launches it against the AppHost.
 - `src/AspireWatchDemo.AppHost` — an Aspire AppHost that uses `AddExecutable()` to start the demo services.
 - `src/AspireWatchDemo.ApiService` — a small watched ASP.NET Core service on `http://127.0.0.1:5071`.
 - `src/AspireWatchDemo.Web` — a second watched ASP.NET Core service on `http://127.0.0.1:5072`.
@@ -21,7 +21,7 @@ dotnet run --project src/AspireWatchDemo.Starter
 
 The starter will:
 
-1. run `dotnet restore`
+1. run `dotnet restore` against `AspireWatchDemo.slnx`
 2. locate `Microsoft.DotNet.HotReload.Watch.Aspire`
 3. launch the AppHost through the restored watch binary
 
@@ -63,7 +63,7 @@ The code is structured to detect that automatically:
 
 The current workspace has already been verified to:
 
-- build successfully with `.NET SDK 10.0.201`
+- build successfully from `AspireWatchDemo.slnx` with `.NET SDK 10.0.201`
 - start both services successfully
 - propagate a shared-library change to both services
 - propagate an API-only change only to the API service
