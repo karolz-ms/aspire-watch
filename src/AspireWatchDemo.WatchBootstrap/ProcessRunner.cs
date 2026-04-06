@@ -4,12 +4,19 @@ namespace AspireWatchDemo.WatchBootstrap;
 
 public static class ProcessRunner
 {
+    private const int CanceledExitCode = 130;
+
     public static async Task<int> RunStreamingAsync(
         string fileName,
         IEnumerable<string> arguments,
         string workingDirectory,
         CancellationToken cancellationToken = default)
     {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return CanceledExitCode;
+        }
+
         using var process = new Process
         {
             StartInfo = new ProcessStartInfo
@@ -52,7 +59,49 @@ public static class ProcessRunner
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
 
-        await process.WaitForExitAsync(cancellationToken);
-        return process.ExitCode;
+        using var cancellationRegistration = cancellationToken.Register(() => TryTerminateProcess(process));
+
+        try
+        {
+            await process.WaitForExitAsync(cancellationToken);
+            return process.ExitCode;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            TryTerminateProcess(process);
+
+            try
+            {
+                if (!process.HasExited)
+                {
+                    await process.WaitForExitAsync(CancellationToken.None);
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                // The process may exit between the HasExited check and WaitForExitAsync.
+            }
+
+            return CanceledExitCode;
+        }
+    }
+
+    private static void TryTerminateProcess(Process process)
+    {
+        try
+        {
+            if (!process.HasExited)
+            {
+                process.Kill(entireProcessTree: true);
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // The process already exited.
+        }
+        catch (NotSupportedException)
+        {
+            // Some platforms may not support terminating the entire process tree.
+        }
     }
 }
