@@ -31,7 +31,7 @@ The starter will:
 
 Edit:
 
-- `src/AspireWatchDemo.Shared/Class1.cs`
+- `src/AspireWatchDemo.Shared/SharedInfo.cs`
 
 Then refresh:
 
