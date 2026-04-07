@@ -22,35 +22,27 @@ ValidateProjectPath(apiProjectPath, "api");
 ValidateProjectPath(webProjectPath, "web");
 
 var watch = WatchAspireLocator.Resolve();
-var mode = WatchAspireCommandBuilder.GetMode(watch);
 var pipes = PipeNameFactory.CreateSet();
 
 Console.WriteLine($"[apphost] Repo root: {repoRoot}");
 Console.WriteLine($"[apphost] Watch.Aspire path: {watch.WatchDllPath}");
 Console.WriteLine($"[apphost] SDK directory: {watch.Dotnet.SdkDirectory}");
-Console.WriteLine($"[apphost] Watch.Aspire mode: {mode}");
 Console.WriteLine($"[apphost] Pipe names: server={pipes.ServerPipeName}, status={pipes.StatusPipeName}, control={pipes.ControlPipeName}");
 
 const int apiPort = 5071;
 const int webPort = 5072;
 
 IResourceBuilder<ExecutableResource>? watchServer = null;
-if (mode == WatchAspireToolMode.LauncherCommands)
-{
-    builder.Services.AddSingleton(pipes);
-    builder.Services.AddHostedService<WatchPipeMonitorHostedService>();
 
-    watchServer = builder.AddExecutable(
-            "watch-server",
-            watch.Dotnet.DotnetExecutablePath,
-            ".",
-            [.. WatchAspireCommandBuilder.BuildServerArguments(watch, pipes, [apiProjectPath, webProjectPath])])
-        .WithEnvironment("ASPIRE_WATCH_PIPE_CONNECTION_TIMEOUT_SECONDS", "30");
-}
-else
-{
-    Console.WriteLine("[apphost] The public 10.0.201 package does not expose separate 'server'/'resource' launchers yet; falling back to per-project watch executables.");
-}
+ builder.Services.AddSingleton(pipes);
+builder.Services.AddHostedService<WatchPipeMonitorHostedService>();
+
+watchServer = builder.AddExecutable(
+        "watch-server",
+        watch.Dotnet.DotnetExecutablePath,
+        ".",
+        [.. WatchAspireCommandBuilder.BuildServerArguments(watch, pipes, [apiProjectPath, webProjectPath])])
+    .WithEnvironment("ASPIRE_WATCH_PIPE_CONNECTION_TIMEOUT_SECONDS", "30");
 
 var api = AddWatchedService("api-service", apiProjectPath, apiPort);
 if (watchServer is not null)
@@ -75,9 +67,7 @@ IResourceBuilder<ExecutableResource> AddWatchedService(string name, string proje
         ["ASPNETCORE_ENVIRONMENT"] = "Development"
     };
 
-    var arguments = mode == WatchAspireToolMode.LauncherCommands
-        ? WatchAspireCommandBuilder.BuildResourceArguments(watch, pipes.ServerPipeName, projectPath, environmentVariables)
-        : WatchAspireCommandBuilder.BuildProjectWatchArguments(watch, projectPath);
+    var arguments = WatchAspireCommandBuilder.BuildResourceArguments(watch, pipes.ServerPipeName, projectPath, environmentVariables);
 
     var serviceWorkingDirectory = Path.GetDirectoryName(projectPath)!;
 

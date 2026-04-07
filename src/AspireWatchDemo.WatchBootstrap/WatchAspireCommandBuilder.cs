@@ -2,10 +2,6 @@ namespace AspireWatchDemo.WatchBootstrap;
 
 public static class WatchAspireCommandBuilder
 {
-    public static WatchAspireToolMode GetMode(WatchAspireLocation location)
-        => Version.TryParse(location.PackageVersion, out var version) && version.Build < 300
-            ? WatchAspireToolMode.LegacyProjectOption
-            : WatchAspireToolMode.LauncherCommands;
 
     public static IReadOnlyList<string> BuildHostArguments(
         WatchAspireLocation location,
@@ -14,14 +10,7 @@ public static class WatchAspireCommandBuilder
     {
         var args = new List<string> { location.WatchDllPath };
 
-        if (GetMode(location) == WatchAspireToolMode.LauncherCommands)
-        {
-            args.AddRange(["host", "--sdk", location.Dotnet.SdkDirectory, "--entrypoint", projectPath, "--verbose"]);
-        }
-        else
-        {
-            args.AddRange(["--sdk", location.Dotnet.SdkDirectory, "--project", projectPath, "--verbose"]);
-        }
+        args.AddRange(["host", "--sdk", location.Dotnet.SdkDirectory, "--entrypoint", projectPath, "--verbose"]);
 
         if (applicationArguments is not null)
         {
@@ -36,11 +25,6 @@ public static class WatchAspireCommandBuilder
         WatchPipeNames pipes,
         IEnumerable<string> resourcePaths)
     {
-        if (GetMode(location) == WatchAspireToolMode.LegacyProjectOption)
-        {
-            throw new NotSupportedException("The public 10.0.201 Watch.Aspire package does not expose the separate 'server' launcher yet.");
-        }
-
         var args = new List<string>
         {
             location.WatchDllPath,
@@ -67,11 +51,6 @@ public static class WatchAspireCommandBuilder
         string projectPath,
         IReadOnlyDictionary<string, string> environmentVariables)
     {
-        if (GetMode(location) == WatchAspireToolMode.LegacyProjectOption)
-        {
-            throw new NotSupportedException("The public 10.0.201 Watch.Aspire package does not expose the separate 'resource' launcher yet.");
-        }
-
         var args = new List<string>
         {
             location.WatchDllPath,
@@ -86,33 +65,6 @@ public static class WatchAspireCommandBuilder
         {
             args.Add("-e");
             args.Add($"{pair.Key}={pair.Value}");
-        }
-
-        return args;
-    }
-
-    public static IReadOnlyList<string> BuildProjectWatchArguments(
-        WatchAspireLocation location,
-        string projectPath,
-        bool noLaunchProfile = true,
-        IEnumerable<string>? applicationArguments = null)
-    {
-        var args = new List<string>
-        {
-            location.WatchDllPath,
-            "--sdk", location.Dotnet.SdkDirectory,
-            "--project", projectPath,
-            "--verbose"
-        };
-
-        if (noLaunchProfile)
-        {
-            args.Add("--no-launch-profile");
-        }
-
-        if (applicationArguments is not null)
-        {
-            args.AddRange(applicationArguments);
         }
 
         return args;
