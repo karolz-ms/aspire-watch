@@ -4,7 +4,7 @@ public sealed record WatchAspireLocation(DotnetSdkInfo Dotnet, string WatchDllPa
 
 public static class WatchAspireLocator
 {
-    public const string RequestedPackageVersion = "10.0.201";
+    public const string RequestedPackageVersion = "10.0.300-preview.26160.113";
 
     private const string PackageId = "microsoft.dotnet.hotreload.watch.aspire";
     private const string EntryPointFileName = "Microsoft.DotNet.HotReload.Watch.Aspire.dll";

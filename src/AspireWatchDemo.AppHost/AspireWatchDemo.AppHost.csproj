@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" Version="13.2.1" />
-    <PackageDownload Include="Microsoft.DotNet.HotReload.Watch.Aspire" Version="[10.0.201]" />
+    <PackageDownload Include="Microsoft.DotNet.HotReload.Watch.Aspire" Version="[10.0.300-preview.26160.113]" />
   </ItemGroup>
 
   <PropertyGroup>
