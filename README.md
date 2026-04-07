@@ -48,22 +48,3 @@ Then refresh:
 
 - `http://127.0.0.1:5071/`
 
-## Important note about the public 10.0.201 package
-
-This repo is pinned to the public `Microsoft.DotNet.HotReload.Watch.Aspire` `10.0.201` package requested in the task.
-
-That public package currently behaves in **legacy compatibility mode** (`--project`) rather than exposing the newer separate `host` / `server` / `resource` launcher split from the newer SDK PR work.
-
-The code is structured to detect that automatically:
-
-- if the installed Watch.Aspire payload exposes the newer launcher split, the sample is ready to use it
-- with the public `10.0.201` payload, it falls back to per-project watch execution so the playground still works today
-
-## Verified locally
-
-The current workspace has already been verified to:
-
-- build successfully from `AspireWatchDemo.slnx` with `.NET SDK 10.0.201`
-- start both services successfully
-- propagate a shared-library change to both services
-- propagate an API-only change only to the API service
