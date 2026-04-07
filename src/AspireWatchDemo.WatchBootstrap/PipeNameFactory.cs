@@ -2,6 +2,8 @@ using System.Security.Cryptography;
 
 namespace AspireWatchDemo.WatchBootstrap;
 
+public sealed record WatchPipeNames(string ServerPipeName, string StatusPipeName, string ControlPipeName);
+
 public static class PipeNameFactory
 {
     private const string Alphabet = "abcdefghijklmnopqrstuvwxyz0123456789";

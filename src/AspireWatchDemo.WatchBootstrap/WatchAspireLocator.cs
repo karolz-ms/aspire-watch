@@ -1,5 +1,7 @@
 namespace AspireWatchDemo.WatchBootstrap;
 
+public sealed record WatchAspireLocation(DotnetSdkInfo Dotnet, string WatchDllPath, string PackageVersion);
+
 public static class WatchAspireLocator
 {
     public const string RequestedPackageVersion = "10.0.201";
