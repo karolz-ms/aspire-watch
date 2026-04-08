@@ -37,7 +37,7 @@ if (restoreExitCode != 0)
     return restoreExitCode;
 }
 
-var watch = WatchAspireLocator.Resolve();
+var watch = WatchAspireLocator.Resolve(dotnet, appHostProjectPath);
 
 Console.WriteLine($"[starter] Watch.Aspire package version: {watch.PackageVersion}");
 Console.WriteLine($"[starter] Watch.Aspire entrypoint: {watch.WatchDllPath}");

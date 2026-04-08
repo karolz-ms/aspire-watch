@@ -1,17 +1,18 @@
+using System.Xml.Linq;
+
 namespace AspireWatchDemo.WatchBootstrap;
 
 public sealed record WatchAspireLocation(DotnetSdkInfo Dotnet, string WatchDllPath, string PackageVersion);
 
 public static class WatchAspireLocator
 {
-    public const string RequestedPackageVersion = "10.0.300-preview.26160.113";
-
     private const string PackageId = "microsoft.dotnet.hotreload.watch.aspire";
+    private const string PackageName = "Microsoft.DotNet.HotReload.Watch.Aspire";
     private const string EntryPointFileName = "Microsoft.DotNet.HotReload.Watch.Aspire.dll";
 
-    public static WatchAspireLocation Resolve(string? preferredVersion = RequestedPackageVersion)
+    public static WatchAspireLocation Resolve(DotnetSdkInfo dotnet, string? appHostProjectPath = null)
     {
-        var dotnet = DotnetSdkLocator.Resolve();
+        var preferredVersion = TryResolvePreferredVersionFromProject(appHostProjectPath);
         var globalPackagesFolder = ResolveGlobalPackagesFolder();
         var packageRoot = Path.Combine(globalPackagesFolder, PackageId);
 
@@ -47,7 +48,71 @@ public static class WatchAspireLocator
         }
 
         throw new FileNotFoundException(
-            $"Could not locate '{EntryPointFileName}' beneath '{packageRoot}'. Ensure 'Microsoft.DotNet.HotReload.Watch.Aspire' was restored.");
+            $"Could not locate '{EntryPointFileName}' beneath '{packageRoot}'. Ensure '{PackageName}' was restored.");
+    }
+
+    private static string? TryResolvePreferredVersionFromProject(string? appHostProjectPath)
+    {
+        if (string.IsNullOrWhiteSpace(appHostProjectPath) || !File.Exists(appHostProjectPath))
+        {
+            return null;
+        }
+
+        try
+        {
+            var project = XDocument.Load(appHostProjectPath);
+            var packageElement = project
+                .Descendants()
+                .FirstOrDefault(static element =>
+                    IsPackageDeclaration(element, "PackageDownload") ||
+                    IsPackageDeclaration(element, "PackageReference"));
+
+            return NormalizeVersion(packageElement);
+        }
+        catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is System.Xml.XmlException)
+        {
+            return null;
+        }
+    }
+
+    private static bool IsPackageDeclaration(XElement element, string elementName)
+        => string.Equals(element.Name.LocalName, elementName, StringComparison.OrdinalIgnoreCase)
+            && string.Equals((string?)element.Attribute("Include"), PackageName, StringComparison.OrdinalIgnoreCase);
+
+    private static string? NormalizeVersion(XElement? packageElement)
+    {
+        var rawVersion = packageElement?.Attribute("Version")?.Value
+            ?? packageElement?.Elements()
+                .FirstOrDefault(static element => string.Equals(element.Name.LocalName, "Version", StringComparison.OrdinalIgnoreCase))
+                ?.Value;
+
+        return NormalizeVersion(rawVersion);
+    }
+
+    private static string? NormalizeVersion(string? rawVersion)
+    {
+        if (string.IsNullOrWhiteSpace(rawVersion))
+        {
+            return null;
+        }
+
+        var trimmed = rawVersion.Trim();
+        if (trimmed.Contains("$(", StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        var unwrapped = trimmed.Trim('[', ']', '(', ')').Trim();
+        if (string.IsNullOrWhiteSpace(unwrapped))
+        {
+            return null;
+        }
+
+        var version = unwrapped
+            .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault();
+
+        return string.IsNullOrWhiteSpace(version) ? null : version;
     }
 
     private static string ResolveGlobalPackagesFolder()
@@ -67,11 +132,12 @@ public static class WatchAspireLocator
         var versions = Directory.EnumerateDirectories(packageRoot)
             .Select(Path.GetFileName)
             .Where(static name => !string.IsNullOrWhiteSpace(name))
-            .Cast<string>()
+            .OfType<string>()
+            .Select(s => s.Trim())
             .OrderByDescending(ParseVersionSafe)
             .ToList();
 
-        if (!string.IsNullOrWhiteSpace(preferredVersion))
+        if (!string.IsNullOrWhiteSpace(preferredVersion) && versions.Contains(preferredVersion))
         {
             yield return preferredVersion;
         }

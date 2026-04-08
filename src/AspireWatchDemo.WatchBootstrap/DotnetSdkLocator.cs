@@ -47,7 +47,11 @@ public static class DotnetSdkLocator
     {
         // Follow the documented lookup order for DOTNET_HOST_PATH and DOTNET_ROOT* variables,
         // then fall back to the common default installation locations for the current platform.
-        yield return Environment.GetEnvironmentVariable("DOTNET_HOST_PATH");
+        var hostPath = Environment.GetEnvironmentVariable("DOTNET_HOST_PATH");
+        if (!string.IsNullOrWhiteSpace(hostPath))
+        {
+            yield return hostPath;
+        }
 
         foreach (var root in GetConfiguredDotnetRoots())
         {
@@ -129,8 +133,7 @@ public static class DotnetSdkLocator
 
             yield break;
         }
-
-        if (OperatingSystem.IsMacOS())
+        else if (OperatingSystem.IsMacOS())
         {
             if (RuntimeInformation.OSArchitecture == Architecture.Arm64 && RuntimeInformation.ProcessArchitecture == Architecture.X64)
             {
@@ -141,8 +144,7 @@ public static class DotnetSdkLocator
             yield return "/usr/local/bin/dotnet";
             yield break;
         }
-
-        if (OperatingSystem.IsLinux())
+        else if (OperatingSystem.IsLinux())
         {
             yield return Path.Combine("/usr/share/dotnet", fileName);
             yield return Path.Combine("/usr/lib/dotnet", fileName);

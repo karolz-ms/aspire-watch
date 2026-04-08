@@ -15,13 +15,16 @@ EnsureEnvironment("ASPIRE_ALLOW_UNSECURED_TRANSPORT", "true");
 var builder = DistributedApplication.CreateBuilder(args);
 
 var repoRoot = WorkspaceLocator.FindRepositoryRoot(Directory.GetCurrentDirectory());
+var appHostProjectPath = Path.Combine(repoRoot, "src", "AspireWatchDemo.AppHost", "AspireWatchDemo.AppHost.csproj");
 var apiProjectPath = Path.Combine(repoRoot, "src", "AspireWatchDemo.ApiService", "AspireWatchDemo.ApiService.csproj");
 var webProjectPath = Path.Combine(repoRoot, "src", "AspireWatchDemo.Web", "AspireWatchDemo.Web.csproj");
 
+ValidateProjectPath(appHostProjectPath, "apphost");
 ValidateProjectPath(apiProjectPath, "api");
 ValidateProjectPath(webProjectPath, "web");
 
-var watch = WatchAspireLocator.Resolve();
+var dotnet = DotnetSdkLocator.Resolve();
+var watch = WatchAspireLocator.Resolve(dotnet, appHostProjectPath);
 var pipes = PipeNameFactory.CreateSet();
 
 Console.WriteLine($"[apphost] Repo root: {repoRoot}");

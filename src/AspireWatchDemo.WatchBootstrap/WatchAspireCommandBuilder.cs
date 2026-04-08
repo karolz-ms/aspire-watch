@@ -10,7 +10,13 @@ public static class WatchAspireCommandBuilder
     {
         var args = new List<string> { location.WatchDllPath };
 
-        args.AddRange(["host", "--sdk", location.Dotnet.SdkDirectory, "--entrypoint", projectPath, "--verbose"]);
+        args.AddRange([
+            "host", 
+            "--sdk", location.Dotnet.SdkDirectory, 
+            "--entrypoint", projectPath, 
+            "--project", projectPath,
+            "--verbose"
+            ]);
 
         if (applicationArguments is not null)
         {
