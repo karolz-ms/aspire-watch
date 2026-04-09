@@ -14,6 +14,7 @@ public static class ProcessRunner
         string fileName,
         IEnumerable<string> arguments,
         string workingDirectory,
+        IReadOnlyDictionary<string, string>? environmentVariables = null,
         CancellationToken cancellationToken = default)
     {
         if (cancellationToken.IsCancellationRequested)
@@ -37,6 +38,14 @@ public static class ProcessRunner
         foreach (var argument in arguments)
         {
             process.StartInfo.ArgumentList.Add(argument);
+        }
+
+        if (environmentVariables is not null)
+        {
+            foreach (var (name, value) in environmentVariables)
+            {
+                process.StartInfo.Environment[name] = value;
+            }
         }
 
         process.OutputDataReceived += static (_, e) =>
