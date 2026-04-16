@@ -2,25 +2,28 @@ namespace AspireWatchDemo.WatchBootstrap;
 
 public static class WatchAspireCommandBuilder
 {
-
     public static IReadOnlyList<string> BuildHostArguments(
         WatchAspireLocation location,
         string projectPath,
         IEnumerable<string>? applicationArguments = null)
     {
-        var args = new List<string> { location.WatchDllPath };
+        var args = new List<string>(location.LaunchArguments);
 
         args.AddRange([
-            "host", 
-            "--sdk", location.Dotnet.SdkDirectory, 
-            "--entrypoint", projectPath, 
-            "--project", projectPath,
+            "host",
+            "--sdk", location.Dotnet.SdkDirectory,
+            "--entrypoint", projectPath,
             "--verbose"
-            ]);
+        ]);
 
         if (applicationArguments is not null)
         {
-            args.AddRange(applicationArguments);
+            var forwardedArguments = applicationArguments.ToArray();
+            if (forwardedArguments.Length > 0)
+            {
+                args.Add("--");
+                args.AddRange(forwardedArguments);
+            }
         }
 
         return args;
@@ -31,9 +34,8 @@ public static class WatchAspireCommandBuilder
         WatchPipeNames pipes,
         IEnumerable<string> resourcePaths)
     {
-        var args = new List<string>
+        var args = new List<string>(location.LaunchArguments)
         {
-            location.WatchDllPath,
             "server",
             "--sdk", location.Dotnet.SdkDirectory,
             "--server", pipes.ServerPipeName,
@@ -57,9 +59,8 @@ public static class WatchAspireCommandBuilder
         string projectPath,
         IReadOnlyDictionary<string, string> environmentVariables)
     {
-        var args = new List<string>
+        var args = new List<string>(location.LaunchArguments)
         {
-            location.WatchDllPath,
             "resource",
             "--server", serverPipeName,
             "--entrypoint", projectPath,

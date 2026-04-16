@@ -12,7 +12,10 @@ EnsureEnvironment("DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS", "true");
 EnsureEnvironment("ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS", "true");
 EnsureEnvironment("ASPIRE_ALLOW_UNSECURED_TRANSPORT", "true");
 
-var builder = DistributedApplication.CreateBuilder(args);
+var watchOptions = WatchAspireOptions.FromArguments(args);
+var forwardedArgs = WatchAspireOptions.FilterApplicationArguments(args);
+
+var builder = DistributedApplication.CreateBuilder(forwardedArgs);
 
 var repoRoot = WorkspaceLocator.FindRepositoryRoot(Directory.GetCurrentDirectory());
 var appHostProjectPath = Path.Combine(repoRoot, "src", "AspireWatchDemo.AppHost", "AspireWatchDemo.AppHost.csproj");
@@ -24,11 +27,12 @@ ValidateProjectPath(apiProjectPath, "api");
 ValidateProjectPath(webProjectPath, "web");
 
 var dotnet = DotnetSdkLocator.Resolve();
-var watch = WatchAspireLocator.Resolve(dotnet, appHostProjectPath);
+var watch = WatchAspireLocator.Resolve(dotnet, watchOptions, appHostProjectPath);
 var pipes = PipeNameFactory.CreateSet();
 
 Console.WriteLine($"[apphost] Repo root: {repoRoot}");
-Console.WriteLine($"[apphost] Watch.Aspire path: {watch.WatchDllPath}");
+Console.WriteLine($"[apphost] Watch.Aspire source: {watch.SourceDescription}");
+Console.WriteLine($"[apphost] Watch.Aspire launch target: {watch.LaunchTargetPath}");
 Console.WriteLine($"[apphost] SDK directory: {watch.Dotnet.SdkDirectory}");
 Console.WriteLine($"[apphost] Pipe names: server={pipes.ServerPipeName}, status={pipes.StatusPipeName}, control={pipes.ControlPipeName}");
 

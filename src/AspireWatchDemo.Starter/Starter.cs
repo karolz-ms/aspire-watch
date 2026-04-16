@@ -18,11 +18,14 @@ Console.CancelKeyPress += (_, eventArgs) =>
     cancellationSource.Cancel();
 };
 
+var watchOptions = WatchAspireOptions.FromArguments(args);
+
 var dotnet = DotnetSdkLocator.Resolve();
 
 Console.WriteLine($"[starter] Repo root: {repoRoot}");
 Console.WriteLine($"[starter] dotnet: {dotnet.DotnetExecutablePath}");
 Console.WriteLine($"[starter] SDK dir: {dotnet.SdkDirectory}");
+Console.WriteLine($"[starter] Private Watch.Aspire mode: {(watchOptions.UsePrivateBuild ? "enabled" : "disabled")}");
 Console.WriteLine($"[starter] Restoring '{restoreTargetPath}' to fetch Watch.Aspire and the demo services...");
 
 var restoreExitCode = await ProcessRunner.RunStreamingAsync(
@@ -37,10 +40,11 @@ if (restoreExitCode != 0)
     return restoreExitCode;
 }
 
-var watch = WatchAspireLocator.Resolve(dotnet, appHostProjectPath);
+var watch = WatchAspireLocator.Resolve(dotnet, watchOptions, appHostProjectPath);
 
+Console.WriteLine($"[starter] Watch.Aspire source: {watch.SourceDescription}");
 Console.WriteLine($"[starter] Watch.Aspire package version: {watch.PackageVersion}");
-Console.WriteLine($"[starter] Watch.Aspire entrypoint: {watch.WatchDllPath}");
+Console.WriteLine($"[starter] Watch.Aspire launch target: {watch.LaunchTargetPath}");
 
 var hostArguments = WatchAspireCommandBuilder.BuildHostArguments(watch, appHostProjectPath, args);
 var appHostWorkingDirectory = Path.GetDirectoryName(appHostProjectPath)!;

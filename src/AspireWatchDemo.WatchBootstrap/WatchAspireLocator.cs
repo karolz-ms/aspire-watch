@@ -2,15 +2,57 @@ using System.Xml.Linq;
 
 namespace AspireWatchDemo.WatchBootstrap;
 
-public sealed record WatchAspireLocation(DotnetSdkInfo Dotnet, string WatchDllPath, string PackageVersion);
+public sealed record WatchAspireLocation(
+    DotnetSdkInfo Dotnet,
+    IReadOnlyList<string> LaunchArguments,
+    string LaunchTargetPath,
+    string PackageVersion,
+    bool IsPrivateBuild)
+{
+    public string WatchDllPath => LaunchTargetPath;
+    public string SourceDescription => IsPrivateBuild ? "private build" : "NuGet package";
+}
 
 public static class WatchAspireLocator
 {
-    private const string PackageId = "microsoft.dotnet.hotreload.watch.aspire";
+    private static string PackageId  => PackageName.ToLowerInvariant();
     private const string PackageName = "Microsoft.DotNet.HotReload.Watch.Aspire";
     private const string EntryPointFileName = "Microsoft.DotNet.HotReload.Watch.Aspire.dll";
 
     public static WatchAspireLocation Resolve(DotnetSdkInfo dotnet, string? appHostProjectPath = null)
+        => Resolve(dotnet, WatchAspireOptions.FromArguments(null), appHostProjectPath);
+
+    public static WatchAspireLocation Resolve(DotnetSdkInfo dotnet, WatchAspireOptions options, string? appHostProjectPath = null)
+        => options.UsePrivateBuild
+            ? ResolvePrivateBuild(dotnet, options.PrivateBuildProjectPath)
+            : ResolveNuGetPackage(dotnet, appHostProjectPath);
+
+    private static WatchAspireLocation ResolvePrivateBuild(DotnetSdkInfo dotnet, string? privateBuildProjectPath)
+    {
+        if (string.IsNullOrWhiteSpace(privateBuildProjectPath))
+        {
+            throw new InvalidOperationException(
+                $"The '{WatchAspireOptions.PrivateBuildFlag}' option requires a path to the private Watch.Aspire project.");
+        }
+
+        var normalizedPath = Path.GetFullPath(privateBuildProjectPath);
+
+        if (!File.Exists(normalizedPath))
+        {
+            throw new FileNotFoundException(
+                $"The private Watch.Aspire project was not found at '{normalizedPath}'.",
+                normalizedPath);
+        }
+
+        return new(
+            dotnet,
+            ["run", "--no-build", "--project", normalizedPath, "--"],
+            normalizedPath,
+            "private-build",
+            true);
+    }
+
+    private static WatchAspireLocation ResolveNuGetPackage(DotnetSdkInfo dotnet, string? appHostProjectPath)
     {
         var preferredVersion = TryResolvePreferredVersionFromProject(appHostProjectPath);
         var globalPackagesFolder = ResolveGlobalPackagesFolder();
@@ -33,7 +75,7 @@ public static class WatchAspireLocator
             var directPath = Path.Combine(versionRoot, "tools", "net10.0", "any", EntryPointFileName);
             if (File.Exists(directPath))
             {
-                return new(dotnet, directPath, version);
+                return new(dotnet, [directPath], directPath, version, false);
             }
 
             var fallback = Directory.EnumerateFiles(
@@ -43,7 +85,7 @@ public static class WatchAspireLocator
 
             if (!string.IsNullOrWhiteSpace(fallback))
             {
-                return new(dotnet, fallback, version);
+                return new(dotnet, [fallback], fallback, version, false);
             }
         }
 
