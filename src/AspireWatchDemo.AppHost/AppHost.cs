@@ -22,7 +22,6 @@ EnsureEnvironment("DOTNET_DASHBOARD_OTLP_HTTP_ENDPOINT_URL", "http://127.0.0.1:1
 EnsureEnvironment("ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL", Environment.GetEnvironmentVariable("DOTNET_DASHBOARD_OTLP_ENDPOINT_URL") ?? "http://127.0.0.1:18889");
 EnsureEnvironment("ASPIRE_DASHBOARD_OTLP_HTTP_ENDPOINT_URL", Environment.GetEnvironmentVariable("DOTNET_DASHBOARD_OTLP_HTTP_ENDPOINT_URL") ?? "http://127.0.0.1:18890");
 EnsureEnvironment("DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS", "true");
-EnsureEnvironment("ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS", "true");
 EnsureEnvironment("ASPIRE_ALLOW_UNSECURED_TRANSPORT", "true");
 
 var forwardedArgs = WatchAspireOptions.FilterApplicationArguments(args);

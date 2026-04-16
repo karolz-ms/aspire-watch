@@ -15,7 +15,7 @@ A standalone repro/playground for experimenting with the `Microsoft.DotNet.HotRe
 
 From the repo root:
 
-```powershell
+```shell
 dotnet run --project src/AspireWatchDemo.Starter
 ```
 
@@ -27,8 +27,14 @@ The starter will:
 
 You can also point the starter app to local repository with Aspire watch tool:
 
-```powershell
+```shell
 dotnet run --project src/AspireWatchDemo.Starter -- --use-private-watch-aspire C:\Users\karolz\code\dotnetsdk\src\Dotnet.Watch\Watch.Aspire\Microsoft.DotNet.HotReload.Watch.Aspire.csproj
+```
+
+Do debug the application host you can make it stop and wait for the debugger to attach on startup:
+
+```shell
+dotnet run --project src/AspireWatchDemo.Starter -- --wait-for-debugger apphost
 ```
 
 ## What to edit while it is running
@@ -48,7 +54,7 @@ Then refresh:
 
 Edit:
 
-- `src/AspireWatchDemo.ApiService/Program.cs`
+- `src/AspireWatchDemo.ApiService/Api.cs`
 
 Then refresh:
 

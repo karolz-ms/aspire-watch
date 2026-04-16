@@ -18,7 +18,7 @@ app.MapGet("/", () => Results.Json(new
     startedAt,
     workingDirectory,
     sharedMessage = SharedInfo.Message,
-    hint = "API-only edit picked up by watch."
+    hint = "API-only edit picked up by watch (v1)."
 }));
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok", service = serviceName }));
