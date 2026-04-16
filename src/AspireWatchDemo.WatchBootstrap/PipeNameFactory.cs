@@ -17,12 +17,6 @@ public static class PipeNameFactory
             ControlPipeName: $"control-{suffix}");
     }
 
-    public static string CreateName(string prefix, int suffixLength = 6)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(prefix);
-        return $"{prefix}-{CreateRandomSuffix(suffixLength)}";
-    }
-
     private static string CreateRandomSuffix(int length = 6)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(length);
