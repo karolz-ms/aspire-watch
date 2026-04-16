@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "custom-aspire-watch": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "commandLineArgs": "--use-private-watch-aspire C:/Users/karolz/code/dotnetsdk/src/Dotnet.Watch/Watch.Aspire/Microsoft.DotNet.HotReload.Watch.Aspire.csproj"
+    },
+     "apphost-wait-for-debugger": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "commandLineArgs": "--use-private-watch-aspire C:/Users/karolz/code/dotnetsdk/src/Dotnet.Watch/Watch.Aspire/Microsoft.DotNet.HotReload.Watch.Aspire.csproj --wait-for-debugger apphost"
+    }
+  }
+}

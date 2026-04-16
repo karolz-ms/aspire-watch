@@ -25,6 +25,12 @@ The starter will:
 2. locate `Microsoft.DotNet.HotReload.Watch.Aspire`
 3. launch the AppHost through the restored watch binary
 
+You can also point the starter app to local repository with Aspire watch tool:
+
+```powershell
+dotnet run --project src/AspireWatchDemo.Starter -- --use-private-watch-aspire C:\Users\karolz\code\dotnetsdk\src\Dotnet.Watch\Watch.Aspire\Microsoft.DotNet.HotReload.Watch.Aspire.csproj
+```
+
 ## What to edit while it is running
 
 ### 1. Shared library edit (should affect both services)

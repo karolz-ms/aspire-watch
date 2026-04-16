@@ -5,10 +5,32 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug starter app",
+            "name": "AppHost attach",
+            "type": "coreclr",
+            "request": "attach",
+            "osx": {
+                "processName": "AspireWatchDemo.AppHost"
+            },
+            "linux": {
+                "processName": "AspireWatchDemo.AppHost"
+            },
+            "windows": {
+                "processName": "AspireWatchDemo.AppHost.exe"
+            }
+        },
+        {
+            "name": "Starter: private watch tool",
             "type": "dotnet",
             "request": "launch",
-            "projectPath": "${workspaceFolder}/src/AspireWatchDemo.Starter/AspireWatchDemo.Starter.csproj"
+            "projectPath": "${workspaceFolder}/src/AspireWatchDemo.Starter/AspireWatchDemo.Starter.csproj",
+            "launchConfigurationId": "TargetFramework=;custom-aspire-watch"
+        },
+        {
+            "name": "Starter: AppHost waits for debugger",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}/src/AspireWatchDemo.Starter/AspireWatchDemo.Starter.csproj",
+            "launchConfigurationId": "TargetFramework=;apphost-wait-for-debugger"
         }
     ]
 }

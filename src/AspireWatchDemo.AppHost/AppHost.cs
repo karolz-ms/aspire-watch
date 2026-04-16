@@ -116,11 +116,3 @@ static void EnsureEnvironment(string name, string value)
         Environment.SetEnvironmentVariable(name, value);
     }
 }
-
-static void WaitForDebugger()
-{
-    while (!Debugger.IsAttached)
-    {
-        Thread.Sleep(100);
-    }
-}
