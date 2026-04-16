@@ -1,7 +1,20 @@
-﻿using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
-using AspireWatchDemo.WatchBootstrap;
+﻿using AspireWatchDemo.WatchBootstrap;
 using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics;
+
+using var cancellationSource = new CancellationTokenSource();
+Console.CancelKeyPress += (_, eventArgs) =>
+{
+    eventArgs.Cancel = true;
+    cancellationSource.Cancel();
+};
+
+var watchOptions = WatchAspireOptions.FromArguments(args);
+if (watchOptions.ShouldWaitForDebugger(WatchAspireOptions.AppHostMoniker))
+{
+    Console.WriteLine("[apphost] Waiting for debugger to attach...");
+    WatchAspireOptions.WaitForDebugger(cancellationSource.Token);
+}
 
 EnsureEnvironment("ASPNETCORE_URLS", "http://127.0.0.1:18888");
 EnsureEnvironment("DOTNET_DASHBOARD_OTLP_ENDPOINT_URL", "http://127.0.0.1:18889");
@@ -12,9 +25,7 @@ EnsureEnvironment("DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS", "true");
 EnsureEnvironment("ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS", "true");
 EnsureEnvironment("ASPIRE_ALLOW_UNSECURED_TRANSPORT", "true");
 
-var watchOptions = WatchAspireOptions.FromArguments(args);
 var forwardedArgs = WatchAspireOptions.FilterApplicationArguments(args);
-
 var builder = DistributedApplication.CreateBuilder(forwardedArgs);
 
 var repoRoot = WorkspaceLocator.FindRepositoryRoot(Directory.GetCurrentDirectory());
@@ -103,5 +114,13 @@ static void EnsureEnvironment(string name, string value)
     if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(name)))
     {
         Environment.SetEnvironmentVariable(name, value);
+    }
+}
+
+static void WaitForDebugger()
+{
+    while (!Debugger.IsAttached)
+    {
+        Thread.Sleep(100);
     }
 }

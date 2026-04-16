@@ -20,12 +20,19 @@ Console.CancelKeyPress += (_, eventArgs) =>
 
 var watchOptions = WatchAspireOptions.FromArguments(args);
 
+if (watchOptions.ShouldWaitForDebugger(WatchAspireOptions.StarterMoniker))
+{
+    Console.WriteLine("[starter] Waiting for debugger to attach...");
+    WatchAspireOptions.WaitForDebugger(cancellationSource.Token);
+}
+
 var dotnet = DotnetSdkLocator.Resolve();
 
 Console.WriteLine($"[starter] Repo root: {repoRoot}");
 Console.WriteLine($"[starter] dotnet: {dotnet.DotnetExecutablePath}");
 Console.WriteLine($"[starter] SDK dir: {dotnet.SdkDirectory}");
 Console.WriteLine($"[starter] Private Watch.Aspire mode: {(watchOptions.UsePrivateBuild ? "enabled" : "disabled")}");
+Console.WriteLine($"[starter] Wait for debugger targets: {(watchOptions.WaitForDebuggerTargets.Count == 0 ? "none" : string.Join(',', watchOptions.WaitForDebuggerTargets))}");
 Console.WriteLine($"[starter] Restoring '{restoreTargetPath}' to fetch Watch.Aspire and the demo services...");
 
 var restoreExitCode = await ProcessRunner.RunStreamingAsync(
@@ -57,3 +64,5 @@ return await ProcessRunner.RunStreamingAsync(
     hostArguments,
     appHostWorkingDirectory,
     cancellationSource.Token);
+
+
